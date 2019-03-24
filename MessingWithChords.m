@@ -2,20 +2,12 @@ clear all
 close all
 clc
 
-% Add all harmonics to a single vector
-x1=0;
 Fs = 16000;
 file = 'f_1.wav';
 [x,Fs] =audioread(file);
-x1=x1 + x;
-file = 'f_2.wav';
-[x,Fs] =audioread(file);
-x1=x1 + x;
-file = 'f_3.wav';
-[x,Fs] =audioread(file);
-x1=x1 + x;
-sound(x1,Fs)
-x=x1.';
+x1=x.';
+x=x1;
+sound(x,Fs)
 
 % Calculate the needed time and frequency vectors
 t = (0:(length(x)-1)) / Fs;
