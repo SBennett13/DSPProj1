@@ -41,8 +41,71 @@ ylabel('Amplitude (V/Hz)')
 xlabel('Frequency (Hz)')
 grid on
 
+%Implement moving average, M = 16
+decimator = horzcat(ones(1,16),zeros(1,15984));
+y = conv(x, decimator);
+t2 = (0:(length(y)-1)) / Fs;
+numPts = 31999;
+f2 = (-numPts/2 : numPts/2-1)*Fs/numPts;
+
+% Do the Fourier Transform
+yFT = fft(y)/numPts;
+yFT_s = fftshift(yFT);
+
+% Plot the raw result
+figure
+subplot(2,1,1)
+plot(t2, y, 'Linewidth', 1.5)
+title("CIC Filtered f Chord :: Time Domain")
+ylabel('Amplitude (V)')
+xlabel('Time (s)')
+grid on
+subplot(2,1,2)
+plot(f2, abs(yFT_s), 'Linewidth', 1.5)
+title('CIC Filtered f Chord :: Frequency Domain')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
+
+%Downsample, M = 16
+z = [];
+for i = 1:length(y)
+    
+    if mod(i,16) == 0
+        z = horzcat(z,y(i));
+    end
+end
+Fs = Fs /16;
+t3 = (0:(length(z)-1)) / Fs;
+numPts = 1999;
+f3 = (-numPts/2 : numPts/2-1)*Fs/numPts;
+
+% Do the Fourier Transform
+zFT = fft(z)/numPts;
+zFT_s = fftshift(zFT);
+
+% Plot the raw result
+figure
+subplot(2,1,1)
+plot(t3, z, 'Linewidth', 1.5)
+title("Downsampled f Chord :: Time Domain")
+ylabel('Amplitude (V)')
+xlabel('Time (s)')
+grid on
+subplot(2,1,2)
+plot(f3, abs(zFT_s), 'Linewidth', 1.5)
+title('Downsampled f Chord :: Frequency Domain')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
+
 %{
 This code does a comparison of the individual harmonics
+file = 'f_1.wav';
+[x,Fs] =audioread(file);
+sound(x,Fs)
+x1=x.';
+x=x1;
 figure
 subplot(2,1,1)
 plot(t, x, 'Linewidth', 1.5)
