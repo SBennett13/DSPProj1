@@ -3,7 +3,7 @@ close all
 clc
 
 Fs = 16000;
-file = 'd_3.wav';
+file = 'f_1.wav';
 [x,Fs] =audioread(file);
 x1=x.';
 x=x1;
@@ -28,6 +28,7 @@ plot(t, x, 'Linewidth', 1.5)
 title('Raw f Chord :: Time Domain')
 ylabel('Amplitude (V)')
 xlabel('Time (s)')
+xlim([0 1.05])
 grid on
 subplot(2,1,2)
 plot(f, abs(xFT_s), 'Linewidth', 1.5)
@@ -47,13 +48,14 @@ f2 = (-numPts/2 : numPts/2-1)*Fs/numPts;
 yFT = fft(y)/numPts;
 yFT_s = fftshift(yFT);
 
-% Plot the raw result
+% Plot the CIC result
 figure
 subplot(2,1,1)
 plot(t2, y, 'Linewidth', 1.5)
 title('CIC Filtered f Chord :: Time Domain')
 ylabel('Amplitude (V)')
 xlabel('Time (s)')
+xlim([0 1.05])
 grid on
 subplot(2,1,2)
 plot(f2, abs(yFT_s), 'Linewidth', 1.5)
@@ -79,19 +81,32 @@ f3 = (-numPts/2 : numPts/2-1)*Fs/numPts;
 zFT = fft(z)/numPts;
 zFT_s = fftshift(zFT);
 
-% Plot the raw result
+%DO THE POLES METHOD HERE
+
+
+% Plot the downsampled result
 figure
 subplot(2,1,1)
 plot(t3, z, 'Linewidth', 1.5)
 title('Downsampled f Chord :: Time Domain')
 ylabel('Amplitude (V)')
 xlabel('Time (s)')
+xlim([0 1.05])
 grid on
 subplot(2,1,2)
 plot(f3, abs(zFT_s), 'Linewidth', 1.5)
 title('Downsampled f Chord :: Frequency Domain')
 ylabel('Amplitude (V/Hz)')
 xlabel('Frequency (Hz)')
+grid on
+
+% Peak detector
+[peaks,locs] = findpeaks(real(zFT_s),'MinPeakHeight', 0.03);
+figure
+plot(f3, abs(zFT_s), f3(locs), peaks, 'Linewidth', 1.5)
+title('Peaks')
+%ylabel('Amplitude (V)')
+%xlabel('Time (s)')
 grid on
 
 %{
