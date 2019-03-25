@@ -3,15 +3,18 @@ close all
 clc
 
 Fs = 16000;
-file = 'f_1.wav';
+file = 'd_3.wav';
 [x,Fs] =audioread(file);
 x1=x.';
 x=x1;
 sound(x,Fs)
 
+% Pad zeros to size 2^15
+x = horzcat(x, zeros(1,16768));
+
 % Calculate the needed time and frequency vectors
 t = (0:(length(x)-1)) / Fs;
-numPts = 16000;
+numPts = length(x);
 f = (-numPts/2 : numPts/2-1)*Fs/numPts;
 
 % Do the Fourier Transform
@@ -22,7 +25,7 @@ xFT_s = fftshift(xFT);
 figure
 subplot(2,1,1)
 plot(t, x, 'Linewidth', 1.5)
-title("Raw f Chord :: Time Domain")
+title('Raw f Chord :: Time Domain')
 ylabel('Amplitude (V)')
 xlabel('Time (s)')
 grid on
@@ -34,10 +37,10 @@ xlabel('Frequency (Hz)')
 grid on
 
 %Implement moving average, M = 16
-decimator = horzcat(ones(1,16),zeros(1,15984));
+decimator = horzcat(ones(1,16),zeros(1,length(x)-16));
 y = conv(x, decimator);
 t2 = (0:(length(y)-1)) / Fs;
-numPts = 31999;
+numPts = length(y);
 f2 = (-numPts/2 : numPts/2-1)*Fs/numPts;
 
 % Do the Fourier Transform
@@ -48,7 +51,7 @@ yFT_s = fftshift(yFT);
 figure
 subplot(2,1,1)
 plot(t2, y, 'Linewidth', 1.5)
-title("CIC Filtered f Chord :: Time Domain")
+title('CIC Filtered f Chord :: Time Domain')
 ylabel('Amplitude (V)')
 xlabel('Time (s)')
 grid on
@@ -69,7 +72,7 @@ for i = 1:length(y)
 end
 Fs = Fs /16;
 t3 = (0:(length(z)-1)) / Fs;
-numPts = 1999;
+numPts = length(z);
 f3 = (-numPts/2 : numPts/2-1)*Fs/numPts;
 
 % Do the Fourier Transform
@@ -80,7 +83,7 @@ zFT_s = fftshift(zFT);
 figure
 subplot(2,1,1)
 plot(t3, z, 'Linewidth', 1.5)
-title("Downsampled f Chord :: Time Domain")
+title('Downsampled f Chord :: Time Domain')
 ylabel('Amplitude (V)')
 xlabel('Time (s)')
 grid on
