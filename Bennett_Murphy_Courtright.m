@@ -5,8 +5,8 @@ function [chord] = Bennett_Murphy_Courtright(file)
     close all
     clc
 
-    Fs = 16000;
-    [x,Fs] =audioread(file);
+    Fs=16000;
+    [x,Fs]=audioread(file);
     x1=x.';
     x=x1;
     sound(x,Fs)
@@ -39,9 +39,19 @@ function [chord] = Bennett_Murphy_Courtright(file)
     xlabel('Frequency (Hz)')
     grid on
 
-    %Implement moving average, M = 16
-    decimator = horzcat(ones(1,16),zeros(1,length(x)-16));
-    y = conv(x, decimator);
+    %
+    %DOWNSAMPLE
+    %
+    
+    %Downsample, M = 16
+    y = [];
+    for i = 1:length(x)
+
+        if mod(i,16) == 0
+            y = horzcat(y,x(i));
+        end
+    end
+    Fs = Fs /16;
     t2 = (0:(length(y)-1)) / Fs;
     numPts = length(y);
     f2 = (-numPts/2 : numPts/2-1)*Fs/numPts;
@@ -50,31 +60,29 @@ function [chord] = Bennett_Murphy_Courtright(file)
     yFT = fft(y)/numPts;
     yFT_s = fftshift(yFT);
 
-    % Plot the CIC result
+    % Plot the downsampled result
     figure
     subplot(2,1,1)
     plot(t2, y, 'Linewidth', 1.5)
-    title('CIC Filtered Chord :: Time Domain')
+    title('Downsampled Chord :: Time Domain')
     ylabel('Amplitude (V)')
     xlabel('Time (s)')
     xlim([0 1.05])
     grid on
     subplot(2,1,2)
     plot(f2, abs(yFT_s), 'Linewidth', 1.5)
-    title('CIC Filtered Chord :: Frequency Domain')
+    title('Downsampled Chord :: Frequency Domain')
     ylabel('Amplitude (V/Hz)')
     xlabel('Frequency (Hz)')
     grid on
 
-    %Downsample, M = 16
-    z = [];
-    for i = 1:length(y)
-
-        if mod(i,16) == 0
-            z = horzcat(z,y(i));
-        end
-    end
-    Fs = Fs /16;
+    %
+    % CIC FILTER
+    %
+    
+    %Implement moving average, M = 16
+    decimator = horzcat(ones(1,16),zeros(1,length(y)-16));
+    z = conv(y, decimator);
     t3 = (0:(length(z)-1)) / Fs;
     numPts = length(z);
     f3 = (-numPts/2 : numPts/2-1)*Fs/numPts;
@@ -83,24 +91,23 @@ function [chord] = Bennett_Murphy_Courtright(file)
     zFT = fft(z)/numPts;
     zFT_s = fftshift(zFT);
 
-    %DO THE POLES METHOD HERE
-
-
-    % Plot the downsampled result
+    % Plot the CIC result
     figure
     subplot(2,1,1)
     plot(t3, z, 'Linewidth', 1.5)
-    title('Downsampled f Chord :: Time Domain')
+    title('CIC Filtered Chord :: Time Domain')
     ylabel('Amplitude (V)')
     xlabel('Time (s)')
     xlim([0 1.05])
     grid on
     subplot(2,1,2)
     plot(f3, abs(zFT_s), 'Linewidth', 1.5)
-    title('Downsampled Chord :: Frequency Domain via FFT')
+    title('CIC Filtered Chord :: Frequency Domain')
     ylabel('Amplitude (V/Hz)')
     xlabel('Frequency (Hz)')
     grid on
+
+    %DO THE POLES METHOD HERE
 
     %
     %
@@ -119,22 +126,15 @@ function [chord] = Bennett_Murphy_Courtright(file)
     zPosAbs = abs(zPos);
     %limit to less than 400 Hz - chosen from reference values given in table 1
     %of project assignment
-    for i = 800:1000
+    upper = length(zPosAbs);
+    lower = round(upper * 4 / 5);
+    for i = lower:upper
         zPosAbs(i) = 0;
     end    
 
     %graph positive part details
-    numPtsPos = 1000;
+    numPtsPos = length(zPosAbs);
     f4 = (0: numPtsPos-1)*Fs/numPts;
-    %{
-    figure
-    plot(f4, zPosAbs, 'Linewidth', 1.5)
-    title('peak filter before')
-    ylabel('Amplitude (V/Hz)')
-    xlabel('Frequency (Hz)')
-    grid on
-    %}
-
 
     %Loop for simplifying findpeaks results - combines nearby peaks in
     %progressively smaller bins to smooth FFT output. Stops looping when no
@@ -169,16 +169,6 @@ function [chord] = Bennett_Murphy_Courtright(file)
         [pks, locs] = findpeaks(zPosAbsCopy);
         filt_length = length(locs);
     end
-
-    %{
-    %FFT array after peaks were combined multiple times
-    figure
-    plot(f4, zPosAbsCopy, 'Linewidth', 1.5)
-    title('peak filter after')
-    ylabel('Amplitude (V/Hz)')
-    xlabel('Frequency (Hz)')
-    grid on
-    %}
 
     %save pks just in case
     pksCopy = pks;
@@ -216,20 +206,10 @@ function [chord] = Bennett_Murphy_Courtright(file)
         zPosAbsCopy(locsFinal(i)) = pksFinal(i);
     end
 
-    %{
-    %print final peaks
-    figure
-    plot(f4, zPosAbsCopy, 'Linewidth', 1.5)
-    title('peak filter final')
-    ylabel('Amplitude (V/Hz)')
-    xlabel('Frequency (Hz)')
-    grid on
-    %}
-
     %chord recognition part
     %input - processed signal - using final FFT of zFT_s here - frequency of
     %each of the 6 peaks stored in freqLocs array
-    freqLocs = locsFinal./2;
+    freqLocs = locsFinal*(Fs/(2*length(zPosAbs)));
     %reference arrays for peak positions
     cRef = [98 130.8 164.8 196 261.6 329.6];
     fRef = [87.31 130.8 174.6 220 261.6 349.2];
@@ -241,7 +221,7 @@ function [chord] = Bennett_Murphy_Courtright(file)
     closeD = 0;
     closeG = 0;
     %range for either side of ideal frequency vale - can be within +- delta
-    delta = 5;
+    delta = length(zPosAbs)*2/Fs;
     %for each reference peak record difference between processed signal and
     %reference frequency
     for x = 1:6
@@ -287,13 +267,13 @@ function [chord] = Bennett_Murphy_Courtright(file)
 
     %outprints correct note based on selection value
     if selection == 1
-        chord = 'c'
+        chord='C';
     elseif selection == 2
-        chord = 'f'
+        chord='F';
     elseif selection == 3
-        chord = 'd'
+        chord='D';
     else
-        chord ='g'
+        chord='G';
     end
 
     %
