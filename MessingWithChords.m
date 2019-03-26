@@ -1,9 +1,9 @@
-clear
+clear all
 close all
 clc
 
 Fs = 16000;
-file = 'f_2.wav';
+file = 'f_1.wav';
 [x,Fs] =audioread(file);
 x1=x.';
 x=x1;
@@ -100,6 +100,8 @@ ylabel('Amplitude (V/Hz)')
 xlabel('Frequency (Hz)')
 grid on
 
+%<<<<<<< HEAD
+
 %
 %
 % Start of Chord Recognition Algorithm
@@ -117,13 +119,16 @@ end
 zPosAbs = abs(zPos);
 %limit to less than 400 Hz - chosen from reference values given in table 1
 %of project assignment
-for i = 800:1000
+upper = length(zPosAbs);
+lower = round(upper * 4 / 5);
+for i = lower:upper
     zPosAbs(i) = 0;
 end    
 
 %graph positive part details
-numPtsPos = 1000;
+numPtsPos = length(zPosAbs);
 f4 = (0: numPtsPos-1)*Fs/numPts;
+
 %{
 figure
 plot(f4, zPosAbs, 'Linewidth', 1.5)
@@ -227,7 +232,7 @@ grid on
 %chord recognition part
 %input - processed signal - using final FFT of zFT_s here - frequency of
 %each of the 6 peaks stored in freqLocs array
-freqLocs = locsFinal./2;
+freqLocs = locsFinal*(Fs/(2*length(zPosAbs)));
 %reference arrays for peak positions
 cRef = [98 130.8 164.8 196 261.6 329.6];
 fRef = [87.31 130.8 174.6 220 261.6 349.2];
@@ -239,7 +244,7 @@ closeF = 0;
 closeD = 0;
 closeG = 0;
 %range for either side of ideal frequency vale - can be within +- delta
-delta = 5;
+delta = length(zPosAbs)*2/Fs;
 %for each reference peak record difference between processed signal and
 %reference frequency
 for x = 1:6
@@ -300,8 +305,7 @@ end
 %
 %
 
-
-%{
+%=======
 % Peak detector
 [peaks,locs] = findpeaks(real(zFT_s),'MinPeakHeight', 0.03);
 figure
@@ -309,5 +313,73 @@ plot(f3, abs(zFT_s), f3(locs), peaks, 'Linewidth', 1.5)
 title('Peaks')
 %ylabel('Amplitude (V)')
 %xlabel('Time (s)')
+grid on
+%>>>>>>> 64c79eda6591ebd13ecc742f8266ac33816191e4
+
+%{
+This code does a comparison of the individual harmonics
+file = 'f_1.wav';
+[x,Fs] =audioread(file);
+sound(x,Fs)
+x1=x.';
+x=x1;
+figure
+subplot(2,1,1)
+plot(t, x, 'Linewidth', 1.5)
+title("f_1 :: Time Domain")
+ylabel('Amplitude (V)')
+xlabel('Time (s)')
+grid on
+subplot(2,1,2)
+plot(f, abs(xFT_s), 'Linewidth', 1.5)
+title('f_1 :: Frequency Domain')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
+
+%Comparing another f
+file = 'f_2.wav';
+[x,Fs] =audioread(file);
+sound(x,Fs)
+x1=x.';
+x=x1;
+xFT = fft(x)/numPts;
+xFT_s = fftshift(xFT);
+
+figure
+subplot(2,1,1)
+plot(t, x, 'Linewidth', 1.5)
+title("f_1 :: Time Domain")
+ylabel('Amplitude (V)')
+xlabel('Time (s)')
+grid on
+subplot(2,1,2)
+plot(f, abs(xFT_s), 'Linewidth', 1.5)
+title('f_1 :: Frequency Domain')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
+
+%Comparing another f
+file = 'f_3.wav';
+[x,Fs] =audioread(file);
+sound(x,Fs)
+x1=x.';
+x=x1;
+xFT = fft(x)/numPts;
+xFT_s = fftshift(xFT);
+
+figure
+subplot(2,1,1)
+plot(t, x, 'Linewidth', 1.5)
+title("f_1 :: Time Domain")
+ylabel('Amplitude (V)')
+xlabel('Time (s)')
+grid on
+subplot(2,1,2)
+plot(f, abs(xFT_s), 'Linewidth', 1.5)
+title('f_1 :: Frequency Domain')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
 grid on
 %}
