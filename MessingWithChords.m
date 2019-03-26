@@ -1,9 +1,9 @@
-clear all
+clear
 close all
 clc
 
 Fs = 16000;
-file = 'f_1.wav';
+file = 'f_2.wav';
 [x,Fs] =audioread(file);
 x1=x.';
 x=x1;
@@ -300,6 +300,8 @@ end
 %
 %
 
+
+%{
 % Peak detector
 [peaks,locs] = findpeaks(real(zFT_s),'MinPeakHeight', 0.03);
 figure
@@ -307,72 +309,5 @@ plot(f3, abs(zFT_s), f3(locs), peaks, 'Linewidth', 1.5)
 title('Peaks')
 %ylabel('Amplitude (V)')
 %xlabel('Time (s)')
-grid on
-
-%{
-This code does a comparison of the individual harmonics
-file = 'f_1.wav';
-[x,Fs] =audioread(file);
-sound(x,Fs)
-x1=x.';
-x=x1;
-figure
-subplot(2,1,1)
-plot(t, x, 'Linewidth', 1.5)
-title("f_1 :: Time Domain")
-ylabel('Amplitude (V)')
-xlabel('Time (s)')
-grid on
-subplot(2,1,2)
-plot(f, abs(xFT_s), 'Linewidth', 1.5)
-title('f_1 :: Frequency Domain')
-ylabel('Amplitude (V/Hz)')
-xlabel('Frequency (Hz)')
-grid on
-
-%Comparing another f
-file = 'f_2.wav';
-[x,Fs] =audioread(file);
-sound(x,Fs)
-x1=x.';
-x=x1;
-xFT = fft(x)/numPts;
-xFT_s = fftshift(xFT);
-
-figure
-subplot(2,1,1)
-plot(t, x, 'Linewidth', 1.5)
-title("f_1 :: Time Domain")
-ylabel('Amplitude (V)')
-xlabel('Time (s)')
-grid on
-subplot(2,1,2)
-plot(f, abs(xFT_s), 'Linewidth', 1.5)
-title('f_1 :: Frequency Domain')
-ylabel('Amplitude (V/Hz)')
-xlabel('Frequency (Hz)')
-grid on
-
-%Comparing another f
-file = 'f_3.wav';
-[x,Fs] =audioread(file);
-sound(x,Fs)
-x1=x.';
-x=x1;
-xFT = fft(x)/numPts;
-xFT_s = fftshift(xFT);
-
-figure
-subplot(2,1,1)
-plot(t, x, 'Linewidth', 1.5)
-title("f_1 :: Time Domain")
-ylabel('Amplitude (V)')
-xlabel('Time (s)')
-grid on
-subplot(2,1,2)
-plot(f, abs(xFT_s), 'Linewidth', 1.5)
-title('f_1 :: Frequency Domain')
-ylabel('Amplitude (V/Hz)')
-xlabel('Frequency (Hz)')
 grid on
 %}
