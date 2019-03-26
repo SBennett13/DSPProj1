@@ -5,6 +5,7 @@ function [chord] = Bennett_Murphy_Courtright(file)
     close all
     clc
 
+    tic
     Fs=16000;
     [x,Fs]=audioread(file);
     x1=x.';
@@ -16,96 +17,27 @@ function [chord] = Bennett_Murphy_Courtright(file)
 
     % Calculate the needed time and frequency vectors
     t = (0:(length(x)-1)) / Fs;
-    numPts = length(x);
-    f = (-numPts/2 : numPts/2-1)*Fs/numPts;
 
-    % Do the Fourier Transform
-    xFT = fft(x)/numPts;
-    xFT_s = fftshift(xFT);
+    %Implement moving average, M = 16
+    decimator = horzcat(ones(1,16),zeros(1,length(x)-16));
+    y = conv(x, decimator);
+    t2 = (0:(length(y)-1)) / Fs;
 
-    % Plot the raw result
-    figure
-    subplot(2,1,1)
-    plot(t, x, 'Linewidth', 1.5)
-    title('Raw Chord :: Time Domain')
-    ylabel('Amplitude (V)')
-    xlabel('Time (s)')
-    xlim([0 1.05])
-    grid on
-    subplot(2,1,2)
-    plot(f, abs(xFT_s), 'Linewidth', 1.5)
-    title('Raw Chord :: Frequency Domain')
-    ylabel('Amplitude (V/Hz)')
-    xlabel('Frequency (Hz)')
-    grid on
-
-    %
-    %DOWNSAMPLE
-    %
-    
     %Downsample, M = 16
-    y = [];
-    for i = 1:length(x)
+    z = [];
+    for i = 1:length(y)
 
         if mod(i,16) == 0
-            y = horzcat(y,x(i));
+            z = horzcat(z,y(i));
         end
     end
     Fs = Fs /16;
-    t2 = (0:(length(y)-1)) / Fs;
-    numPts = length(y);
-    f2 = (-numPts/2 : numPts/2-1)*Fs/numPts;
-
-    % Do the Fourier Transform
-    yFT = fft(y)/numPts;
-    yFT_s = fftshift(yFT);
-
-    % Plot the downsampled result
-    figure
-    subplot(2,1,1)
-    plot(t2, y, 'Linewidth', 1.5)
-    title('Downsampled Chord :: Time Domain')
-    ylabel('Amplitude (V)')
-    xlabel('Time (s)')
-    xlim([0 1.05])
-    grid on
-    subplot(2,1,2)
-    plot(f2, abs(yFT_s), 'Linewidth', 1.5)
-    title('Downsampled Chord :: Frequency Domain')
-    ylabel('Amplitude (V/Hz)')
-    xlabel('Frequency (Hz)')
-    grid on
-
-    %
-    % CIC FILTER
-    %
-    
-    %Implement moving average, M = 16
-    decimator = horzcat(ones(1,16),zeros(1,length(y)-16));
-    z = conv(y, decimator);
     t3 = (0:(length(z)-1)) / Fs;
     numPts = length(z);
-    f3 = (-numPts/2 : numPts/2-1)*Fs/numPts;
 
     % Do the Fourier Transform
     zFT = fft(z)/numPts;
     zFT_s = fftshift(zFT);
-
-    % Plot the CIC result
-    figure
-    subplot(2,1,1)
-    plot(t3, z, 'Linewidth', 1.5)
-    title('CIC Filtered Chord :: Time Domain')
-    ylabel('Amplitude (V)')
-    xlabel('Time (s)')
-    xlim([0 1.05])
-    grid on
-    subplot(2,1,2)
-    plot(f3, abs(zFT_s), 'Linewidth', 1.5)
-    title('CIC Filtered Chord :: Frequency Domain')
-    ylabel('Amplitude (V/Hz)')
-    xlabel('Frequency (Hz)')
-    grid on
 
     %DO THE POLES METHOD HERE
 
@@ -132,9 +64,14 @@ function [chord] = Bennett_Murphy_Courtright(file)
         zPosAbs(i) = 0;
     end    
 
+    upper = round(length(zPosAbs)*.16);
+    lower = 1;
+    for i = lower:upper
+        zPosAbs(i) = 0;
+    end 
+    
     %graph positive part details
     numPtsPos = length(zPosAbs);
-    f4 = (0: numPtsPos-1)*Fs/numPts;
 
     %Loop for simplifying findpeaks results - combines nearby peaks in
     %progressively smaller bins to smooth FFT output. Stops looping when no
@@ -264,16 +201,15 @@ function [chord] = Bennett_Murphy_Courtright(file)
         selection = 4;
         currMax = closeG;
     end
-
     %outprints correct note based on selection value
     if selection == 1
-        chord='C';
+        chord='C'
     elseif selection == 2
-        chord='F';
+        chord='F'
     elseif selection == 3
-        chord='D';
+        chord='D'
     else
-        chord='G';
+        chord='G'
     end
 
     %
@@ -281,5 +217,6 @@ function [chord] = Bennett_Murphy_Courtright(file)
     % End Chord Recogntion Algorithm
     %
     %
+    toc
 end
 

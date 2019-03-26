@@ -2,8 +2,9 @@ clear
 close all
 clc
 
+tic
 Fs = 16000;
-file = 'c_1.wav';
+file = 'd_3.wav';
 [x,Fs] =audioread(file);
 x1=x.';
 x=x1;
@@ -99,6 +100,7 @@ title('Downsampled Chord :: Frequency Domain')
 ylabel('Amplitude (V/Hz)')
 xlabel('Frequency (Hz)')
 grid on
+
 
 %
 %
@@ -297,6 +299,7 @@ else
     disp('G');
 end
 
+toc
 %
 %
 % End Chord Recogntion Algorithm

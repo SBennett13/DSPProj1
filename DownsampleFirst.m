@@ -2,6 +2,7 @@ clear
 close all
 clc
 
+tic
 Fs=16000;
 file = 'f_3.wav';
 [x,Fs]=audioread(file);
@@ -105,6 +106,7 @@ ylabel('Amplitude (V/Hz)')
 xlabel('Frequency (Hz)')
 grid on
 
+toc
 %DO THE POLES METHOD HERE
 
 %
