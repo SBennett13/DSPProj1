@@ -3,7 +3,7 @@ close all
 clc
 
 Fs=16000;
-file = 'c_1.wav';
+file = 'f_3.wav';
 [x,Fs]=audioread(file);
 x1=x.';
 x=x1;
@@ -113,15 +113,25 @@ grid on
 %
 %
 
+
 %convert to positive only indices
 half_length = round(length(zFT_s)/2);
 zPos = zeros(1,half_length);
 for i = 1:length(zPos)
     zPos(i) = zFT_s(i+half_length-1);
 end
-
 %create magnitude array for convenience
 zPosAbs = abs(zPos);
+
+%reference arrays for peak positions
+cRef = [98 130.8 164.8 196 261.6 329.6];
+fRef = [87.31 130.8 174.6 220 261.6 349.2];
+dRef = [92.5 110 146.8 220 293.6 270];
+gRef = [98 123.5 146.8 196 246.9 392];
+lowerstChordFreq = fRef(1);
+%range for either side of ideal frequency vale - can be within +- delta
+delta = length(zPosAbs)*2/Fs;
+
 %limit to less than 400 Hz - chosen from reference values given in table 1
 %of project assignment
 upper = length(zPosAbs);
@@ -130,9 +140,26 @@ for i = lower:upper
     zPosAbs(i) = 0;
 end    
 
+%limit to greater than 50 Hz - chosen from reference values given in table 1
+%of project assignment
+lower = 1;
+upper = round(length(zPosAbs) * 0.16);
+for i = lower:upper
+    zPosAbs(i) = 0;
+end    
+
+
 %graph positive part details
 numPtsPos = length(zPosAbs);
 f4 = (0: numPtsPos-1)*Fs/numPts;
+
+figure
+plot(f4, zPosAbs, 'Linewidth', 1.5)
+title('peak filter before')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
+
 
 %Loop for simplifying findpeaks results - combines nearby peaks in
 %progressively smaller bins to smooth FFT output. Stops looping when no
@@ -167,6 +194,14 @@ while filt_length_old ~= filt_length
     [pks, locs] = findpeaks(zPosAbsCopy);
     filt_length = length(locs);
 end
+
+%FFT array after peaks were combined multiple times
+figure
+plot(f4, zPosAbsCopy, 'Linewidth', 1.5)
+title('peak filter after')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
 
 %save pks just in case
 pksCopy = pks;
@@ -204,22 +239,24 @@ for i = 1:length(locsFinal)
     zPosAbsCopy(locsFinal(i)) = pksFinal(i);
 end
 
+
+%print final peaks
+figure
+plot(f4, zPosAbsCopy, 'Linewidth', 1.5)
+title('peak filter final')
+ylabel('Amplitude (V/Hz)')
+xlabel('Frequency (Hz)')
+grid on
+
 %chord recognition part
 %input - processed signal - using final FFT of zFT_s here - frequency of
 %each of the 6 peaks stored in freqLocs array
 freqLocs = locsFinal*(Fs/(2*length(zPosAbs)));
-%reference arrays for peak positions
-cRef = [98 130.8 164.8 196 261.6 329.6];
-fRef = [87.31 130.8 174.6 220 261.6 349.2];
-dRef = [92.5 110 146.8 220 293.6 270];
-gRef = [98 123.5 146.8 196 246.9 392];
 %create 4 delta value trackers for each note
 closeC = 0;
 closeF = 0;
 closeD = 0;
 closeG = 0;
-%range for either side of ideal frequency vale - can be within +- delta
-delta = length(zPosAbs)*2/Fs;
 %for each reference peak record difference between processed signal and
 %reference frequency
 for x = 1:6
