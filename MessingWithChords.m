@@ -100,8 +100,6 @@ ylabel('Amplitude (V/Hz)')
 xlabel('Frequency (Hz)')
 grid on
 
-<<<<<<< HEAD
-
 %
 %
 % Start of Chord Recognition Algorithm
@@ -302,7 +300,6 @@ end
 %
 %
 
-=======
 % Peak detector
 [peaks,locs] = findpeaks(real(zFT_s),'MinPeakHeight', 0.03);
 figure
@@ -311,7 +308,6 @@ title('Peaks')
 %ylabel('Amplitude (V)')
 %xlabel('Time (s)')
 grid on
->>>>>>> 64c79eda6591ebd13ecc742f8266ac33816191e4
 
 %{
 This code does a comparison of the individual harmonics
