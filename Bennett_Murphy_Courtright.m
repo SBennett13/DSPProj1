@@ -54,6 +54,8 @@ function [chord] = Bennett_Murphy_Courtright(file)
     [a_k] = all_pole(z, p);
     [H_sqr, w] = spec_est(a_k, length(z));
     
+    % All-Pole vs Fourier plots
+    %{
     figure
     subplot(2,1,1)
     plot(linspace(0, Fs/2, floor(length(zFT_s)/2)), (abs(zFT_s(length(zFT_s)/2:end-1))/10))
@@ -67,6 +69,7 @@ function [chord] = Bennett_Murphy_Courtright(file)
     xlabel('Frequency (Hz)')
     ylabel('Amplitude (V/Hz)')
     grid on
+    %}
     
     %
     %
