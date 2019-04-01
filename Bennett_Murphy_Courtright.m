@@ -1,5 +1,4 @@
 function [chord] = Bennett_Murphy_Courtright(file)
-
     close all
     clc
 
@@ -33,9 +32,20 @@ function [chord] = Bennett_Murphy_Courtright(file)
     t3 = (0:(length(z)-1)) / Fs;
     numPts = length(z);
 
-    %DO THE POLES METHOD HERE
+    % The All-Pole Method
+    
+    % Plotting the Pole Error Plot
+    %{
+    [err, p] = all_pole_error(z, Fs, 100);
+    figure
+    plot(p, err)
+    xlabel('Number of Poles')
+    ylabel('Error')
+    title('All-Pole Method: Number of Poles vs Error')
+    grid on
+    %}
+    
     p = 40;
-
     [~, M] = corrmtx(z,p);
     R=M(1:p, 1:p);
     phi=M(2:end,1);
@@ -226,10 +236,46 @@ function [chord] = Bennett_Murphy_Courtright(file)
     toc
 end
 
+% Returns Normalized Pole vs Error Plot
+function [err, p] = all_pole_error(x, Fs, max_poles)
+    p = 1:max_poles;
+    err = zeros(1, max_poles);
+    
+    % Correct Method for Pole Error Plot: E{(x[n]-sum(ak*x[n-k])^2}
+    %{
+    for i=p
+        w_n = wgn(1, length(x), 1);
+        [a] = all_pole(x, i);
+        tmp = zeros(i, length(x));
+        for j=1:i
+            tmp(j,j:end) = x(1:end-j+1);
+        end
+        err(i) = mean((x-sum(a.*tmp)).^2);
+    end
+    %}
+    
+    % Error vs Poles calcuated by comparing spectrums
+    for i=p
+        [a] = all_pole(x, i);
+        [H_sqr, w] = spec_est(a, length(x));
+        x_f = fftshift(fft(x));
+        err(i) = mean(abs(x_f(length(x)/2:end-1))-(abs(H_sqr(1:2:end-1))/100));
+    end
+    err = err/max(err); 
+end
+
 %Spectrum Estimation for the All-Pole Method
 function [H_sqr, w] = spec_est(a, num_pts)
     w=linspace(0, pi, num_pts);
     i=1:num_pts;
     k=1:length(a);
     H_sqr = 1./(1-a(k)'*exp(-j*k'*w(i)));
+end
+
+%Generate All-Pole Constants a1, a2, ..., ap
+function [a] = all_pole(x, p)
+    [~, M] = corrmtx(x,p);
+    R=M(1:p, 1:p);
+    phi=M(2:end,1);
+    a=inv(R)*phi;
 end
