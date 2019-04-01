@@ -1,17 +1,15 @@
-
-% file is the sound data sampled at 16kHz in the form of a .wav file
 function [chord] = Bennett_Murphy_Courtright(file)
 
     close all
     clc
 
-    tic
     Fs=16000;
     [x,Fs]=audioread(file);
     x1=x.';
     x=x1;
     sound(x,Fs)
-
+    
+    tic
     % Pad zeros to size 2^15
     x = horzcat(x, zeros(1,16768));
 
@@ -35,18 +33,26 @@ function [chord] = Bennett_Murphy_Courtright(file)
     t3 = (0:(length(z)-1)) / Fs;
     numPts = length(z);
 
-    % Do the Fourier Transform
-    zFT = fft(z)/numPts;
-    zFT_s = fftshift(zFT);
-
     %DO THE POLES METHOD HERE
+    p = 40;
 
+    [~, M] = corrmtx(z,p);
+    R=M(1:p, 1:p);
+    phi=M(2:end,1);
+    a_k=inv(R)*phi;
+
+    [H_sqr, w] = spec_est(a_k, length(z));
+    
     %
     %
     % Start of Chord Recognition Algorithm
     %
     %
 
+    % Do the Fourier Transform
+    zFT = fft(z)/numPts;
+    zFT_s = fftshift(zFT);
+    
     %convert to positive only indices
     half_length = round(length(zFT_s)/2);
     zPos = zeros(1,half_length);
@@ -220,3 +226,10 @@ function [chord] = Bennett_Murphy_Courtright(file)
     toc
 end
 
+%Spectrum Estimation for the All-Pole Method
+function [H_sqr, w] = spec_est(a, num_pts)
+    w=linspace(0, pi, num_pts);
+    i=1:num_pts;
+    k=1:length(a);
+    H_sqr = 1./(1-a(k)'*exp(-j*k'*w(i)));
+end
