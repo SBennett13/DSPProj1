@@ -31,6 +31,10 @@ function [chord] = Bennett_Murphy_Courtright(file)
     Fs = Fs /16;
     t3 = (0:(length(z)-1)) / Fs;
     numPts = length(z);
+    
+    % Do the Fourier Transform
+    zFT = fft(z)/numPts;
+    zFT_s = fftshift(zFT);
 
     % The All-Pole Method
     
@@ -46,22 +50,29 @@ function [chord] = Bennett_Murphy_Courtright(file)
     %}
     
     p = 40;
-    [~, M] = corrmtx(z,p);
-    R=M(1:p, 1:p);
-    phi=M(2:end,1);
-    a_k=inv(R)*phi;
-
+    
+    [a_k] = all_pole(z, p);
     [H_sqr, w] = spec_est(a_k, length(z));
+    
+    figure
+    subplot(2,1,1)
+    plot(linspace(0, Fs/2, floor(length(zFT_s)/2)), (abs(zFT_s(length(zFT_s)/2:end-1))/10))
+    title('Discrete Fourier Transform Frequency Spectrum')
+    xlabel('Frequency (Hz)')
+    ylabel('Amplitude (V/Hz)')
+    grid on
+    subplot(2,1,2)
+    plot(linspace(0, Fs/2, floor(length(H_sqr)/2)), abs(H_sqr(1:2:end-1)))
+    title('All-Pole Frequency Spectrum')
+    xlabel('Frequency (Hz)')
+    ylabel('Amplitude (V/Hz)')
+    grid on
     
     %
     %
     % Start of Chord Recognition Algorithm
     %
     %
-
-    % Do the Fourier Transform
-    zFT = fft(z)/numPts;
-    zFT_s = fftshift(zFT);
     
     %convert to positive only indices
     half_length = round(length(zFT_s)/2);
